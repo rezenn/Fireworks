@@ -19,10 +19,18 @@ var shells = [];
 var stars = [];
 var sounds = [];
 
+const IS_MOBILE = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const DENSITY = IS_MOBILE ? 0.5 : 1;
+
+let numStars = Math.floor(80 * DENSITY);
+let seeds = Math.floor(160 * DENSITY);
+let rows = IS_MOBILE ? 5 : 8;
+
 let sky;
 
 function makeSky() {
   sky = createGraphics(windowWidth, windowHeight);
+  sky.pixelDensity(1);
   let ctx = sky.drawingContext;
 
   let g = ctx.createLinearGradient(0, 0, 0, windowHeight);
@@ -32,24 +40,31 @@ function makeSky() {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, windowWidth, windowHeight);
 
-  (sky, noStroke());
+  sky.noStroke();
   for (let i = 0; i < 250; i++) {
     sky.fill(255, 255, 255, random(80, 255));
+    sky.circle(random(windowWidth), random(windowHeight * 0.8), random(0.5, 2));
   }
 
-  let mx = width * 0.8;
-  let my = height * 0.18;
-  let r = min(width, height) * 0.06;
+  let mx = windowWidth * 0.8;
+  let my = windowHeight * 0.18;
+  let r = min(windowWidth, windowHeight) * 0.06;
   ctx.save();
-  ctx.shadowColor = "rgba(9, 9, 9, 0.8)";
+  ctx.shadowColor = "rgba(255, 250, 220, 0.8)";
   ctx.shadowBlur = r * 1.5;
   sky.fill(245, 243, 225);
+  sky.circle(mx, my, r * 2);
   ctx.restore();
 
+  sky.fill(215, 212, 195, 150);
+  sky.circle(mx - r * 0.3, my - r * 0.25, r * 0.4);
+  sky.circle(mx + r * 0.25, my + r * 0.1, r * 0.3);
+  sky.circle(mx - r * 0.1, my + r * 0.4, r * 0.2);
+
   ctx.filter = "blur(6px)";
-  drawCloud(sky, width * 0.25, height * 0.25, width * 0.3);
-  drawCloud(sky, width * 0.65, height * 0.4, width * 0.35);
-  drawCloud(sky, width * 0.1, height * 0.55, width * 0.25);
+  drawCloud(sky, windowWidth * 0.25, windowHeight * 0.25, windowWidth * 0.3);
+  drawCloud(sky, windowWidth * 0.65, windowHeight * 0.4, windowWidth * 0.35);
+  drawCloud(sky, windowWidth * 0.1, windowHeight * 0.55, windowWidth * 0.25);
   ctx.filter = "none";
 }
 
@@ -67,10 +82,13 @@ function drawCloud(g, x, y, w) {
 }
 
 function setup() {
+  pixelDensity(1);
+
   createCanvas(windowWidth, windowHeight);
   makeSky();
   image(sky, 0, 0);
   strokeWeight(1);
+  frameRate(30);
   colorMode(HSB);
   for (let i = 0; i < 3; i++) {
     sounds.push(loadSound("sounds/explosion" + i + ".mp3"));
@@ -93,6 +111,14 @@ function draw() {
     let s = new Shell();
     shells.push(s);
   }
+  const MAX_STARS = 1500;
+  if (stars.length > MAX_STARS) stars.splice(0, stars.length - MAX_STARS);
+
+  resetMatrix();
+  noStroke();
+  fill(0, 0, 100);
+  textSize(14);
+  textAlign(CENTER);
 }
 
 class Shell {
@@ -105,6 +131,8 @@ class Shell {
     if (type == undefined) {
       let randIndex = floor(random(0, SHELLTYPES.length));
       type = SHELLTYPES[randIndex];
+    }
+    if (random() < (IS_MOBILE ? 0.015 : 0.03)) {
     }
     this.position = position;
     this.speed = speed;
