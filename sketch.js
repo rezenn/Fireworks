@@ -8,7 +8,6 @@ const SHELLTYPES = [
   "pent",
   "comet",
   "heart",
-  "spiral",
   "sunflower",
 ];
 const GRAVITY = 0.2;
@@ -19,18 +18,10 @@ var shells = [];
 var stars = [];
 var sounds = [];
 
-const IS_MOBILE = /Android|iPhone|iPad/i.test(navigator.userAgent);
-const DENSITY = IS_MOBILE ? 0.5 : 1;
-
-let numStars = Math.floor(80 * DENSITY);
-let seeds = Math.floor(160 * DENSITY);
-let rows = IS_MOBILE ? 5 : 8;
-
 let sky;
 
 function makeSky() {
   sky = createGraphics(windowWidth, windowHeight);
-  sky.pixelDensity(1);
   let ctx = sky.drawingContext;
 
   let g = ctx.createLinearGradient(0, 0, 0, windowHeight);
@@ -50,7 +41,7 @@ function makeSky() {
   let my = windowHeight * 0.18;
   let r = min(windowWidth, windowHeight) * 0.06;
   ctx.save();
-  ctx.shadowColor = "rgba(255, 250, 220, 0.8)";
+  ctx.shadowColor = "rgba(146, 106, 247, 0.79)";
   ctx.shadowBlur = r * 1.5;
   sky.fill(245, 243, 225);
   sky.circle(mx, my, r * 2);
@@ -81,18 +72,18 @@ function drawCloud(g, x, y, w) {
   }
 }
 
-function setup() {
-  pixelDensity(1);
+function preload() {
+  for (let i = 0; i < 3; i++) {
+    sounds.push(loadSound("sounds/explosion" + i + ".mp3"));
+  }
+}
 
+function setup() {
   createCanvas(windowWidth, windowHeight);
   makeSky();
   image(sky, 0, 0);
   strokeWeight(1);
-  frameRate(30);
   colorMode(HSB);
-  for (let i = 0; i < 3; i++) {
-    sounds.push(loadSound("sounds/explosion" + i + ".mp3"));
-  }
 }
 
 function draw() {
@@ -111,29 +102,34 @@ function draw() {
     let s = new Shell();
     shells.push(s);
   }
-  const MAX_STARS = 1500;
-  if (stars.length > MAX_STARS) stars.splice(0, stars.length - MAX_STARS);
-
-  resetMatrix();
-  noStroke();
-  fill(0, 0, 100);
-  textSize(14);
-  textAlign(CENTER);
 }
 
 class Shell {
   constructor(position, speed, type, sparkleTrail) {
-    if (position == undefined)
-      position = createVector(int(random(-width / 4, width / 4)), 0);
-    if (speed == undefined)
-      speed = createVector(random(-2, 2), -random(11, 16));
+    let mobile = windowWidth < 800;
+
+    if (position == undefined) {
+      let spread = mobile ? width * 0.4 : width / 4;
+      position = createVector(int(random(-spread, spread)), 0);
+    }
+
+    if (speed == undefined) {
+      let vMin = 11,
+        vMax = 16;
+      if (mobile) {
+        vMin = sqrt(2 * GRAVITY * height * 0.3);
+        vMax = sqrt(2 * GRAVITY * height * 0.9);
+      }
+      speed = createVector(random(-2, 2), -random(vMin, vMax));
+    }
+
     if (sparkleTrail == undefined) sparkleTrail = random() < 0.5;
+
     if (type == undefined) {
       let randIndex = floor(random(0, SHELLTYPES.length));
       type = SHELLTYPES[randIndex];
     }
-    if (random() < (IS_MOBILE ? 0.015 : 0.03)) {
-    }
+
     this.position = position;
     this.speed = speed;
     this.sparkleTrail = sparkleTrail;
@@ -294,8 +290,6 @@ class Shell {
       this.drawSunflower();
     } else if (this.type == "heart") {
       this.drawHearts();
-    } else if (this.type == "sunflower") {
-      this.drawSunflower();
     } else if (this.type == "pent") {
       let baseDir = random(0, TWO_PI);
       this.drawStars(20, 3, 5, 3, 8, "writer", baseDir + (2 / 5) * PI, 6);
@@ -364,6 +358,7 @@ class Star {
         random(50, 75),
         round(random(20, 40)),
         round(random(0, 30)),
+        "default",
         1,
         1,
       );
@@ -383,8 +378,13 @@ class Star {
   }
 }
 
+let lastTouch = 0;
+
 function touchMoved() {
-  touchStarted();
+  if (millis() - lastTouch > 300) {
+    lastTouch = millis();
+    touchStarted();
+  }
   return false;
 }
 
