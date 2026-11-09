@@ -219,8 +219,8 @@ class Shell {
     let rot = random(TWO_PI);
     let centerR = 1.5;
 
-    this.petalRing(14, 1.3, 5.1, 0.7, rot, 50, 56);
-    this.petalRing(14, 1.3, 4.0, 0.6, rot + PI / 12, 60, 56);
+    this.petalRing(14, 1.3, 5.1, 0.7, rot, 60, 20);
+    this.petalRing(14, 1.3, 4.0, 0.6, rot + PI / 12, 50, 56);
 
     let seeds = 160;
     for (let n = 0; n < seeds; n++) {
@@ -372,8 +372,6 @@ class Star {
       noStroke();
       fill(0, 0, 100);
       textAlign(CENTER);
-      textFont("Georgia");
-
       textSize(18);
       text("Click anywhere to enable sound", 0, -height / 2);
     }
